@@ -18,6 +18,10 @@
   "homepage": "https://github.com/Zerokk/centralizr#readme",
   "dependencies": {
     "body-parser": "^1.18.2",
-    "helmet": "^3.9.0"
+    "cookie-parser": "^1.4.3",
+    "helmet": "^3.9.0",
+    "mongodb": "^2.2.33",
+    "spdy": "^3.4.7",
+    "sqlite3": "^3.1.13"
   }
 }

@@ -19,6 +19,8 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "cookie-parser": "^1.4.3",
+    "express": "^4.16.2",
+    "express-force-https": "^1.0.0",
     "helmet": "^3.9.0",
     "mongodb": "^2.2.33",
     "spdy": "^3.4.7",

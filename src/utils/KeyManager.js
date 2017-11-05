@@ -1,8 +1,22 @@
+/**
+ *          Clase KeyManager, orientada a asegurar la app desde peticiones externas.
+ * 
+ *  Con cada petición entre vistas, generamos una serie de claves que caducan al poco tiempo, que se
+ *  dan inicialmente con el login, y luego se van generando forma específica para cada dato de la API,
+ *  de modo que todos los accesos quedan reducidos a UNA acción entre vistas. Esta API está pensada para
+ *  ser usada únicamente por un usuario, aunque se podría refactorizar para permitir varios usuarios.
+ * 
+ *  - cachedKeys:    mantiene las claves relativas a cada struct.
+ *  - tempKeys:      se usa para generar secuencias de claves, antes de emitirlas.
+ *  - sessionKey:    mantiene la clave de sesión del usuario.
+ */
+
 class KeyManager{
 
     constructor(){
-        this.cachedKeys = [];
+        this.cachedKeys = [];  
         this.tempKeys = [];
+        this.sessionKey = null;
     }
 
     /**
@@ -12,6 +26,27 @@ class KeyManager{
         const key = Math.trunc(Math.random()*1000000)+1;
         this.tempKeys.push({structId: struct.id, key: key});  // Emitimos una clave para este struct
         return key;
+    }
+
+    /**
+     * Genera una clave para tener constancia de la sesión de un usuario al pasar entre vistas.
+     */
+    static genSessionKey(){
+        let key = Math.trunc(Math.random()*1000000)+1;
+        this.sessionKey = key;
+        setTimeout(() => {
+            this.sessionKey = null;
+        }, 15000);
+        return key;
+    }
+
+    static checkSessionKey(key){
+        if(this.sessionKey == key){
+            this.sessionKey = null;
+            return true;
+        }else{
+            return false;
+        }
     }
 
     /**

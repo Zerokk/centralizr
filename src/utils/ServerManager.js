@@ -2,6 +2,7 @@ const helmet = require('helmet');
 const spdy = require('spdy');
 const https = require('https');
 const force_https = require('express-force-https');
+const bodyParser = require('body-parser');
 const fs = require('fs');
 
 class ServerManager{
@@ -10,7 +11,7 @@ class ServerManager{
 
     createServer(app){
         // Body parser
-        var bodyParser = require('body-parser');
+        
         app.use(bodyParser.json()); // support json encoded bodies
         app.use(force_https);
         app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies

@@ -20,27 +20,31 @@ app.post('/login', (req, res) => {
     const pw = req.body.pw;
     console.log("received: ", user, pw)
     if(credentials.user === user && credentials.pw === pw){
-        res.cookie("logstat" , 'ssss').send('<a href="getstructs">Access to the structs list</a>');
+        res.redirect("/getstructs?sessionkey="+KeyManager.genSessionKey());
     }
 });
 
 
 
 app.get('/getstructs', (req, res) => {
-   KeyManager.reset();
-   const structDAO = new StructDAO();
-   const timestamp = new Date().timestamp;
-   let responseString = "<ol>";
-   structDAO.fetchAll().then( data => {
-       console.log("DATA: ", data);
-      data.map( (val,index) => {
-        const key = KeyManager.genKey(val);
-        responseString += "<a href=getStruct?key="+key+"><li> - "+val.name+"   =>   "+val.description+"</li></a>"
-      });
-      responseString += "</ol>";
-      KeyManager.emitKeys();
-      res.send(responseString);
-   });
+   const sessionKey = req.query.sessionkey;
+   if(sessionKey != null && KeyManager.checkSessionKey(sessionKey)){
+        KeyManager.reset();
+        console.log("value: ", req.params.asd)
+        const structDAO = new StructDAO();
+        const timestamp = new Date().timestamp;
+        let responseString = "<ol>";
+        structDAO.fetchAll().then( data => {
+            console.log("DATA: ", data);
+            data.map( (val,index) => {
+                const key = KeyManager.genKey(val);  // generamos y metemos las claves en el html
+                responseString += "<a href=getStruct?key="+key+"><li> - "+val.name+"   =>   "+val.description+"</li></a>"
+            });
+            responseString += "</ol>";
+            KeyManager.emitKeys();  // emitimos las claves y hacemos que sólo se puedan usar durante un tiempo
+            res.send(responseString);
+        });
+   }
 });
 
 app.get('/getstruct', (req, res) => {
@@ -48,6 +52,7 @@ app.get('/getstruct', (req, res) => {
     let found = false;
     const structId = KeyManager.check(key);
     if(structId){
+        KeyManager.reset();
         const structDAO = new StructDAO();
         structDAO.getStruct(structId)
             .then(struct => {

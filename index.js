@@ -3,6 +3,7 @@ const app = require('express')();
 const fs = require('fs');
 // Internal imports
 const StructDAO = require('./src/DAOs/StructDAO').StructDAO;
+const RegistryDAO = require('./src/DAOs/RegistryDAO').RegistryDAO;
 const KeyManager = require('./src/utils/KeyManager').KeyManager;
 const ServerManager = require('./src/utils/ServerManager').ServerManager;
 // Global declarations
@@ -20,44 +21,68 @@ app.post('/login', (req, res) => {
     const pw = req.body.pw;
     console.log("received: ", user, pw)
     if(credentials.user === user && credentials.pw === pw){
-        res.redirect("/getstructs?sessionkey="+KeyManager.genSessionKey());
+        if(req.body.origin == 'navigator'){
+            res.redirect("/getstructs?origin=navigator&sessionKey="+KeyManager.genSessionKey());
+        }else if(req.body.origin == 'ionic'){
+            res.send({key: KeyManager.genSessionKey()});
+        }
+        
     }
 });
 
 
 
 app.get('/getstructs', (req, res) => {
-   const sessionKey = req.query.sessionkey;
+   const sessionKey = req.query.sessionKey;
+   const origin = req.query.origin;
+
    if(sessionKey != null && KeyManager.checkSessionKey(sessionKey)){
         KeyManager.reset();
-        console.log("value: ", req.params.asd)
         const structDAO = new StructDAO();
-        const timestamp = new Date().timestamp;
-        let responseString = "<ol>";
-        structDAO.fetchAll().then( data => {
-            console.log("DATA: ", data);
-            data.map( (val,index) => {
-                const key = KeyManager.genKey(val);  // generamos y metemos las claves en el html
-                responseString += "<a href=getStruct?key="+key+"><li> - "+val.name+"   =>   "+val.description+"</li></a>"
+        if(origin == "navigator"){
+            let responseString = "<ol>";
+            structDAO.fetchAll().then( data => {     
+                data.map( (val,index) => {
+                    const key = KeyManager.genKey(val);  // generamos y metemos las claves en el html
+                    responseString += "<a href=getStruct?key="+key+"><li> - "+val.name+"   =>   "+val.description+"</li></a>"
+                });
+                responseString += "</ol>";
+                KeyManager.emitKeys();  // emitimos las claves y hacemos que sólo se puedan usar durante un tiempo
+                res.send(responseString);
             });
-            responseString += "</ol>";
-            KeyManager.emitKeys();  // emitimos las claves y hacemos que sólo se puedan usar durante un tiempo
-            res.send(responseString);
-        });
-   }
+
+        }else if(origin == "ionic"){
+            structDAO.fetchAll().then( data => {     
+                data.map( (val,index) => {
+                    val.datasets = null;
+                    val.key =  KeyManager.genKey(val);  // generamos y metemos las claves en el html
+                });
+                KeyManager.emitKeys();  // emitimos las claves y hacemos que sólo se puedan usar durante un tiempo
+                res.send(data);
+            });
+        }
+    }
 });
 
 app.get('/getstruct', (req, res) => {
     let key = req.query.key;
-    let found = false;
     const structId = KeyManager.check(key);
     if(structId){
         KeyManager.reset();
         const structDAO = new StructDAO();
+        const registryDAO = new RegistryDAO();
         structDAO.getStruct(structId)
             .then(struct => {
-                res.send(struct);
-            });
+                registryDAO.fetchForStruct(structId, 0).then( registries => {
+                    if(registries){
+                        res.send({struct: struct, registries: registries});
+                    }else{
+                        res.send({struct: struct, registries: "empty"});
+                    }
+                }).catch( err => {
+                    res.send({struct: struct, err: err});    
+                });
+            }).catch( err => res.send({err: err}));
 
     }else{ // nos han enviado una clave inválida
         res.send("ERROR: Has enviado una clave incorrecta");

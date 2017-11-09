@@ -1,5 +1,5 @@
 const DBHelper = require('../db/DBHelper').DBHelper;
-const DBHelper = require('../entities/Registry').Registry;
+const Registry = require('../entities/Registry').Registry;
 
 class RegistryDAO {
 
@@ -7,10 +7,10 @@ class RegistryDAO {
         this.dbHelper = new DBHelper();
     }
 
-    fetchForStruct(struct, page){
+    fetchForStruct(structId, page){
         return new Promise((resolve, reject) => {
             this.dbHelper.connect().then(conn => {
-                    conn.collection("registries").find()
+                    conn.collection(structId+"_regs").find()
                     .skip(page*20)
                     .limit(20).toArray( (err,data) => {
                         if (!err){

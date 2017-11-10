@@ -97,15 +97,24 @@ app.get('/getstruct', (req, res) => {
 
 
  });
+*/
+ app.post("/insertregistry", (req, res) => {
 
- app.get("/insertregistry", (req, res) => {
-    let reg = req.query.registry;
-   
-    
+     const structId =  req.body.id;
+     const result = req.body.results;
+     const structDAO = new StructDAO();
+    // const actualStruct = structDAO.getStruct()
+
+     // validate result (TODO)
+     
+
+
+     const registryDAO = new RegistryDAO();
+
 
  });
 
-*/
+
 function logConnection(req){
     const ip = req.ip;
     const ips = req.ips;

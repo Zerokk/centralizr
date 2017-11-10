@@ -1,5 +1,5 @@
 const DBHelper = require('../db/DBHelper').DBHelper;
-
+const ObjectID = require('mongodb').ObjectID;
 class StructDAO {
 
     constructor(){
@@ -26,7 +26,9 @@ class StructDAO {
     getStruct(id){
         return new Promise((resolve, reject) => {
             this.dbHelper.connect().then(conn => {
-                    conn.collection("structs").findOne({id: id}, (err,data) => {
+                
+                    const objId = new ObjectID(id);
+                    conn.collection("structs").findOne({_id: objId}).then( (data,err) => {
                         if (!err){
                             this.dbHelper.closeConn();
                             resolve(data);  
@@ -35,7 +37,7 @@ class StructDAO {
                             this.dbHelper.closeConn();
                             reject(err);
                         }
-                    })
+                    }).catch( err => console.log("ERROR: ", err))
             })
         })
     }

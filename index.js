@@ -75,9 +75,9 @@ app.get('/getstruct', (req, res) => {
             .then(struct => {
                 registryDAO.fetchForStruct(structId, 0).then( registries => {
                     if(registries){
-                        res.send({struct: struct, registries: registries});
+                        res.send({struct: struct, data: registries});
                     }else{
-                        res.send({struct: struct, registries: "empty"});
+                        res.send({struct: struct, data: "empty"});
                     }
                 }).catch( err => {
                     res.send({struct: struct, err: err});    
@@ -101,18 +101,44 @@ app.get('/getstruct', (req, res) => {
  app.post("/insertregistry", (req, res) => {
 
      const structId =  req.body.id;
-     const result = req.body.results;
-     const structDAO = new StructDAO();
-    // const actualStruct = structDAO.getStruct()
-
-     // validate result (TODO)
-     
-
-
-     const registryDAO = new RegistryDAO();
-
-
+     const results = req.body.results;
+     const isValid = validate(structId, results).then( isValid => {
+        if(isValid==true){
+            const registryDAO = new RegistryDAO();
+            console.log("Inserting...")
+            registryDAO.insert(structId, results).then( r => {
+                if(r == true){
+                    res.send('{"status":"success"}');
+                }
+            });
+         }
+     });
  });
+
+  function validate(structId, results){
+      return new Promise( (resolve, reject) => { 
+        const structDAO = new StructDAO();
+        structDAO.getStruct(structId).then ( struct => {
+                let count = 0;
+                struct.datasets.map(dataset => {
+                    let value = results[dataset.varName];
+                        switch(dataset.type){
+                            case "number":
+                                if(!isNaN(value)) count++;
+                            case "text":
+                                if(isNaN(value)) count++;
+                        }
+                });
+        
+                if(count == struct.datasets.length){
+                    resolve(true)
+                }else{
+                    resolve(false);
+                }
+        
+        }).catch(err => console.log("ERR: ", err));
+    });
+ }
 
 
 function logConnection(req){

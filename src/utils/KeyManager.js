@@ -24,7 +24,8 @@ class KeyManager{
      */
     static genKey(struct){
         const key = Math.trunc(Math.random()*1000000)+1;
-        this.tempKeys.push({structId: struct.id, key: key});  // Emitimos una clave para este struct
+        this.tempKeys.push({structId: struct._id, key: key});  // Emitimos una clave para este struct
+        console.log("pushed id: ", struct._id)
         return key;
     }
 

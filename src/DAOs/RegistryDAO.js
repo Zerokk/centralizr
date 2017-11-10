@@ -27,14 +27,19 @@ class RegistryDAO {
     }
 
     insert(structId, registry){
-        const registry = new Registry(structId, registry);
-        this.dbHelper.connect().then(conn => {
-            conn.collection("registries").insertOne(registry, (err, res) => {
-                if (err) throw err;
-                console.log(">> registro insertado");
-                this.dbHelper.closeConn();
-              });
-    })
+        return new Promise((resolve, reject) => {
+            this.dbHelper.connect().then(conn => {
+                conn.collection(structId+"_regs").insertOne(registry, (err, res) => {
+                    if (err){
+                        console.log("ERROR", err)
+                        reject(err);
+                    }
+                    console.log(">> registro insertado", res);
+                    this.dbHelper.closeConn();
+                    resolve(true);
+                });
+            })
+        })
     }
 }
 

@@ -7,13 +7,14 @@ const fs = require('fs');
 
 class ServerManager{
 
-    constructor(){}
+    constructor(useHttps, port){
+        this.useHttps = useHttps;
+        this.port = port;
+    }
 
     createServer(app){
         // Body parser
-        
         app.use(bodyParser.json()); // support json encoded bodies
-        app.use(force_https);
         app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
         // Security configs
@@ -25,17 +26,23 @@ class ServerManager{
             next();
         });
 
-        // Setup HTTPS
-        const httpsPort = 3443;
-        const options = {
-        key: fs.readFileSync("./certificates/key.pem", "utf8"),
-        cert: fs.readFileSync("./certificates/cert.pem", "utf8")
-        };
+        if(this.useHttps){
+            // Setup HTTPS
+            const options = {
+            key: fs.readFileSync("./certificates/key.pem", "utf8"),
+            cert: fs.readFileSync("./certificates/cert.pem", "utf8")
+            };
 
-        const secureServer = spdy.createServer(options, app);
-        secureServer.listen(httpsPort, () => {
-            console.log(">> CentraliZr listening at port "+httpsPort);
-        });
+            app.use(force_https);
+            const secureServer = spdy.createServer(options, app);
+            secureServer.listen(this.port, () => {
+                console.log(">> App (HTTPS) listening at port "+this.port);
+            });
+        }else{
+            app.listen(this.port, () => {
+                console.log(">> App (HTTP) listening at port "+this.port);
+            });
+        }
     }
 }
 

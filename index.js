@@ -7,9 +7,9 @@ const RegistryDAO = require('./src/DAOs/RegistryDAO').RegistryDAO;
 const KeyManager = require('./src/utils/KeyManager').KeyManager;
 const ServerManager = require('./src/utils/ServerManager').ServerManager;
 // Global declarations
-const server = new ServerManager().createServer(app);
+const server = new ServerManager(false, 3443).createServer(app);
 
-// Hooks
+// Routing
 app.get('/', (req, res) => {
     res.sendFile(__dirname+"/welcome.html");
     
@@ -29,8 +29,6 @@ app.post('/login', (req, res) => {
         
     }
 });
-
-
 
 app.get('/getstructs', (req, res) => {
    const sessionKey = req.query.sessionKey;
